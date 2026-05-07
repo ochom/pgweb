@@ -1,9 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
+	"html"
+	"io"
 	"net/http"
 	neturl "net/url"
 	"strings"
@@ -65,10 +68,30 @@ func setClient(c *gin.Context, newClient *client.Client) error {
 
 // GetHome renders the home page
 func GetHome(prefix string) http.Handler {
-	if prefix != "" {
-		prefix = "/" + prefix
-	}
-	return http.StripPrefix(prefix, static.GetHandler())
+	staticHandler := GetAssets(prefix)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if command.Opts.Title != "" {
+			fs := static.GetFilesystem()
+			f, err := fs.Open("index.html")
+			if err == nil {
+				defer f.Close()
+				content, err := io.ReadAll(f)
+				if err == nil {
+					content = bytes.Replace(
+						content,
+						[]byte("<title>pgweb</title>"),
+						[]byte("<title>"+html.EscapeString(command.Opts.Title)+"</title>"),
+						1,
+					)
+					w.Header().Set("Content-Type", "text/html; charset=utf-8")
+					w.Write(content)
+					return
+				}
+			}
+		}
+		staticHandler.ServeHTTP(w, r)
+	})
 }
 
 func GetAssets(prefix string) http.Handler {

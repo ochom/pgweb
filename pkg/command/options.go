@@ -21,6 +21,7 @@ const (
 
 type Options struct {
 	Version                      bool   `short:"v" long:"version" description:"Print version"`
+	Title                        string `long:"title" description:"Custom title for the web interface"`
 	Debug                        bool   `short:"d" long:"debug" description:"Enable debugging mode"`
 	LogLevel                     string `long:"log-level" description:"Logging level" default:"info"`
 	LogFormat                    string `long:"log-format" description:"Logging output format" default:"text"`
